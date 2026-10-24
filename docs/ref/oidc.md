@@ -347,6 +347,33 @@ you need to [authorize access based on group membership](#authorize-users-with-f
     - `Full group path` is enabled: groups contain their full path, e.g. `/top/group1`
     - `Full group path` is disabled: only the name of the group is used, e.g. `group1`
 
+#### Revoke access when Keycloak does
+
+Headscale checks `allowed_groups` only when a user logs in. A user who is later disabled, deleted, or removed from the
+group keeps every node they registered until the node expires. With `oidc.keycloak` set, Headscale asks Keycloak's
+admin API about each OIDC user from the configured issuer every `interval`, and expires all nodes of a user who is
+missing, disabled, or does not hold `required_role` (a realm role, granted directly, through a group, or through a
+composite role).
+
+```yaml title="config.yaml"
+oidc:
+  issuer: "https://id.example.com/realms/main"
+  allowed_groups: ["tailnet:user"]
+  keycloak:
+    client_id: "headscale-sync"
+    client_secret_path: "${CREDENTIALS_DIRECTORY}/keycloak_sync_secret"
+    required_role: "tailnet:user"
+    interval: 5m
+```
+
+- Create a confidential client (here `headscale-sync`) with only *Service accounts roles* enabled, and give its service
+  account the `realm-management` roles `view-users` and `view-realm`.
+- To use a realm role with `allowed_groups`, add a `User Realm Role` mapper with token claim name `groups` to the
+  Headscale client, so the role appears in the `groups` claim.
+- Nodes are expired, not deleted: an administrator can extend a node's expiry, and a reinstated user can log in again.
+- If Keycloak cannot be reached, or answers unexpectedly, nothing is expired for that user; the next run tries again.
+- Tagged nodes are owned by their tags, not by a user, and are never expired by this check.
+
 ### Microsoft Entra ID
 
 In order to integrate Headscale with Microsoft Entra ID, you'll need to provision an App Registration with the correct

@@ -45,6 +45,7 @@ var (
 	errOIDCIssuerInvalid         = errors.New("oidc.issuer must be a valid http(s) URL")
 	errOIDCClientIDRequired      = errors.New("oidc.client_id is required when oidc.issuer is set")
 	errOIDCClientSecretRequired  = errors.New("oidc.client_secret or oidc.client_secret_path is required when oidc.issuer is set")
+	errKeycloakIncomplete        = errors.New("oidc.keycloak needs client_secret or client_secret_path, required_role, a positive interval, and an issuer of the form https://<host>/realms/<realm>")
 	errServerURLSuffix           = errors.New("server_url cannot be part of base_domain in a way that could make the DERP and headscale server unreachable")
 	errServerURLSame             = errors.New("server_url cannot use the same domain as base_domain in a way that could make the DERP and headscale server unreachable")
 	errInvalidPKCEMethod         = errors.New("pkce.method must be either 'plain' or 'S256'")
@@ -378,6 +379,22 @@ type OIDCConfig struct {
 	EmailVerifiedRequired      bool
 	UseExpiryFromToken         bool
 	PKCE                       PKCEConfig
+	Keycloak                   KeycloakConfig
+}
+
+// KeycloakConfig enables periodic re-checking of OIDC users against the
+// issuer's Keycloak admin API. Nodes of users who are deleted, disabled, or
+// lose RequiredRole are expired. Enabled when ClientID is set.
+type KeycloakConfig struct {
+	ClientID     string
+	ClientSecret string `json:"-"` // never serialise the service-account secret
+	RequiredRole string
+	Interval     time.Duration
+}
+
+// Enabled reports whether Keycloak reconciliation is configured.
+func (k KeycloakConfig) Enabled() bool {
+	return k.ClientID != ""
 }
 
 type DERPConfig struct {
@@ -531,6 +548,16 @@ func validateOIDCConfig() error {
 		return errOIDCClientSecretRequired
 	}
 
+	if viper.GetString("oidc.keycloak.client_id") != "" {
+		noSecret := viper.GetString("oidc.keycloak.client_secret") == "" &&
+			viper.GetString("oidc.keycloak.client_secret_path") == ""
+		if noSecret || viper.GetString("oidc.keycloak.required_role") == "" ||
+			viper.GetDuration("oidc.keycloak.interval") <= 0 ||
+			!strings.Contains(u.Path, "/realms/") {
+			return errKeycloakIncomplete
+		}
+	}
+
 	return nil
 }
 
@@ -613,6 +640,7 @@ func LoadConfig(path string, isFile bool) error {
 	viper.SetDefault("oidc.pkce.enabled", false)
 	viper.SetDefault("oidc.pkce.method", "S256")
 	viper.SetDefault("oidc.email_verified_required", true)
+	viper.SetDefault("oidc.keycloak.interval", "5m")
 
 	viper.SetDefault("logtail.enabled", false)
 	viper.SetDefault("taildrop.enabled", true)
@@ -1645,6 +1673,22 @@ func LoadServerConfig() (*Config, error) {
 		}
 	}
 
+	keycloakSecret := viper.GetString("oidc.keycloak.client_secret")
+	if path := viper.GetString("oidc.keycloak.client_secret_path"); path != "" {
+		secretBytes, err := os.ReadFile(os.ExpandEnv(path))
+		if err != nil {
+			v.Add(&ConfigError{
+				Reason:  "oidc.keycloak.client_secret_path cannot be read",
+				Current: []KV{{"oidc.keycloak.client_secret_path", path}},
+				Detail:  err.Error(),
+				Hint:    "ensure the file exists and is readable by the headscale user",
+				Cause:   err,
+			})
+		} else {
+			keycloakSecret = strings.TrimSpace(string(secretBytes))
+		}
+	}
+
 	serverURL := viper.GetString("server_url")
 
 	// BaseDomain cannot be the same as the server URL.
@@ -1729,6 +1773,12 @@ func LoadServerConfig() (*Config, error) {
 			PKCE: PKCEConfig{
 				Enabled: viper.GetBool("oidc.pkce.enabled"),
 				Method:  viper.GetString("oidc.pkce.method"),
+			},
+			Keycloak: KeycloakConfig{
+				ClientID:     viper.GetString("oidc.keycloak.client_id"),
+				ClientSecret: keycloakSecret,
+				RequiredRole: viper.GetString("oidc.keycloak.required_role"),
+				Interval:     viper.GetDuration("oidc.keycloak.interval"),
 			},
 		},
 

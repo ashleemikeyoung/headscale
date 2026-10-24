@@ -84,6 +84,13 @@ clients, and how to run the same setup without Nix.
 the ACME DNS-01 challenge through a built-in DNS provider: `acmedns`,
 `cloudflare`, `gigahost`, `hetzner`, `powerdns` or `rfc2136`. `dns.base_domain` must be a public domain you control. [#3554](https://github.com/juanfont/headscale/pull/3554)
 
+### Keycloak access revocation
+
+`oidc.keycloak` makes Headscale re-check OIDC users against Keycloak's admin API
+on an interval and expire the nodes of users who are deleted, disabled, or lose
+a required realm role. Previously `allowed_groups` was enforced only at login.
+See [Keycloak](https://headscale.net/development/ref/oidc/#keycloak).
+
 ### BREAKING
 
 #### Database

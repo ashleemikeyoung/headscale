@@ -37,6 +37,7 @@ import (
 	"github.com/juanfont/headscale/hscontrol/derp"
 	derpServer "github.com/juanfont/headscale/hscontrol/derp/server"
 	"github.com/juanfont/headscale/hscontrol/dns"
+	"github.com/juanfont/headscale/hscontrol/keycloak"
 	"github.com/juanfont/headscale/hscontrol/mapper"
 	"github.com/juanfont/headscale/hscontrol/state"
 	"github.com/juanfont/headscale/hscontrol/types"
@@ -90,6 +91,9 @@ type Headscale struct {
 	state           *state.State
 	noisePrivateKey *key.MachinePrivate
 	ephemeralGC     *db.EphemeralGarbageCollector
+
+	// keycloak is nil unless oidc.keycloak is configured.
+	keycloak principalChecker
 
 	DERPServer *derpServer.DERPServer
 
@@ -220,6 +224,21 @@ func NewHeadscale(cfg *types.Config) (*Headscale, error) {
 	}
 
 	app.authProvider = authProvider
+
+	if cfg.OIDC.Issuer != "" && cfg.OIDC.Keycloak.Enabled() {
+		kc, err := keycloak.New(
+			cfg.OIDC.Issuer,
+			cfg.OIDC.Keycloak.ClientID,
+			cfg.OIDC.Keycloak.ClientSecret,
+			cfg.OIDC.Keycloak.RequiredRole,
+			nil,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("setting up Keycloak reconciliation: %w", err)
+		}
+
+		app.keycloak = kc
+	}
 
 	if app.cfg.TailcfgDNSConfig != nil && app.cfg.TailcfgDNSConfig.Proxied { // if MagicDNS
 		// TODO(kradalby): revisit why this takes a list.
@@ -353,6 +372,20 @@ func (h *Headscale) scheduledTasks(ctx context.Context) {
 		revokedKeyGCChan = revokedKeyTicker.C
 	}
 
+	var keycloakChan <-chan time.Time
+
+	if h.keycloak != nil {
+		keycloakTicker := time.NewTicker(h.cfg.OIDC.Keycloak.Interval)
+		defer keycloakTicker.Stop()
+
+		keycloakChan = keycloakTicker.C
+
+		log.Info().
+			Dur("interval", h.cfg.OIDC.Keycloak.Interval).
+			Str("role", h.cfg.OIDC.Keycloak.RequiredRole).
+			Msg("Keycloak reconciliation enabled")
+	}
+
 	// OAuth access tokens are short-lived (1h) and re-minted on demand; reap
 	// expired rows hourly so the table stays bounded.
 	accessTokenTicker := time.NewTicker(time.Hour)
@@ -373,6 +406,9 @@ func (h *Headscale) scheduledTasks(ctx context.Context) {
 			} else if reaped > 0 {
 				log.Info().Int("count", reaped).Msg("reaped revoked pre-auth keys")
 			}
+
+		case <-keycloakChan:
+			h.reconcileKeycloak(ctx)
 
 		case <-accessTokenTicker.C:
 			reaped, err := h.state.DeleteExpiredAccessTokens(time.Now())

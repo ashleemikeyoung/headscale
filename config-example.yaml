@@ -473,6 +473,17 @@ unix_socket_permission: "0770"
 #     # - plain: Use plain code verifier
 #     # - S256: Use SHA256 hashed code verifier (default, recommended)
 #     method: S256
+#
+#   # Optional, Keycloak only: re-check OIDC users against the issuer's admin
+#   # API every `interval` and expire all nodes of users who are deleted,
+#   # disabled, or no longer hold `required_role` (a realm role). The client is
+#   # a service account with the realm-management roles view-users and
+#   # view-realm. Enabled when client_id is set.
+#   keycloak:
+#     client_id: "headscale-sync"
+#     client_secret_path: "${CREDENTIALS_DIRECTORY}/keycloak_sync_secret"
+#     required_role: "tailnet:user"
+#     interval: 5m
 
 # Logtail configuration
 # Logtail is Tailscales logging and auditing infrastructure, it allows the
