@@ -10,7 +10,7 @@ import (
 // communicate what just happened.
 type AuthSuccessResult struct {
 	// Title is the browser tab / page title,
-	// e.g. "Headscale - Node Registered".
+	// e.g. "ElRoi Pneuma - Node Registered".
 	Title string
 
 	// Heading is the bold green text inside the success box,
@@ -44,17 +44,13 @@ func AuthSuccess(result AuthSuccessResult) *elem.Element {
 	return page(
 		result.Title,
 		box,
-		H2(elem.Text("Getting started")),
-		P(elem.Text("Check out the documentation to learn more about headscale and Tailscale:")),
-		Ul(
-			elem.Li(
-				nil,
-				externalLink("https://headscale.net/stable/", "Headscale documentation"),
-			),
-			elem.Li(
-				nil,
-				externalLink("https://tailscale.com/docs", "Tailscale docs"),
-			),
+		H2(elem.Text("Next")),
+		P(
+			elem.Text("This device is on the tailnet. Servers are reachable by name, for example "),
+			Code(elem.Text("ssh ash@id")),
+			elem.Text(". "),
+			A("/", elem.Text("How to join another device")),
+			elem.Text("."),
 		),
 	)
 }

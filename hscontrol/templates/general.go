@@ -83,17 +83,43 @@ func codeBlockText(code string) *elem.Element {
 	return elem.Pre(nil, elem.Code(nil, elem.Text(code)))
 }
 
-// headscaleLogo returns the Headscale SVG logo for consistent branding across all pages.
-// The logo is styled by the .headscale-logo CSS class.
-func headscaleLogo() elem.Node {
-	// Return the embedded SVG as-is
-	return elem.Raw(assets.SVG)
+// ProductName is the name people see for this service. ElRoi is the product
+// brand and Qavats the company; the marks are in [assets.Brand].
+const ProductName = "ElRoi Pneuma"
+
+// brandMark renders a mark that follows the reader's colour scheme: the
+// "-on-dark" variant in dark mode, the "-on-light" variant otherwise.
+func brandMark(name, alt, class string) elem.Node {
+	return elem.Picture(nil,
+		elem.Source(attrs.Props{
+			"media":  "(prefers-color-scheme: dark)",
+			"srcset": "/brand/" + name + "-on-dark.svg",
+		}),
+		elem.Img(attrs.Props{
+			attrs.Src:   "/brand/" + name + "-on-light.svg",
+			attrs.Alt:   alt,
+			attrs.Class: class,
+		}),
+	)
 }
 
-// pageFooter creates a consistent footer for all pages.
+// headscaleLogo returns the product header shown at the top of every page:
+// the ElRoi mark with the product name beside it, linking to the home page.
+// It keeps the .headscale-logo class so upstream styling hooks still apply.
+func headscaleLogo() elem.Node {
+	return elem.A(attrs.Props{attrs.Href: "/", attrs.Class: "headscale-logo brand-header", "aria-label": ProductName},
+		brandMark("elroi", "ElRoi", "brand-product"),
+		elem.Span(attrs.Props{attrs.Class: "brand-name"}, elem.Text("Pneuma")),
+	)
+}
+
+// pageFooter creates a consistent footer for all pages: the company mark,
+// and the credit to the open-source projects this is built on, which their
+// BSD-3-Clause licences ask us to keep.
 func pageFooter() *elem.Element {
 	return elem.Footer(
 		attrs.Props{
+			attrs.Class: "brand-footer",
 			attrs.Style: styles.Props{
 				styles.MarginTop:  space3XL,
 				styles.TextAlign:  "center",
@@ -102,17 +128,27 @@ func pageFooter() *elem.Element {
 				styles.LineHeight: lineHeightBase,
 			}.ToInline(),
 		},
-		elem.Text("Powered by "),
-		elem.A(attrs.Props{
-			attrs.Href:   "https://github.com/juanfont/headscale",
-			attrs.Rel:    "noreferrer noopener",
-			attrs.Target: "_blank",
-		}, elem.Text("Headscale")),
+		brandMark("qavats-it", "Qavats IT", "brand-company"),
+		elem.P(nil,
+			elem.Text(ProductName+" is operated by Qavats. Built on "),
+			elem.A(attrs.Props{
+				attrs.Href:   "https://github.com/juanfont/headscale",
+				attrs.Rel:    "noreferrer noopener",
+				attrs.Target: "_blank",
+			}, elem.Text("Headscale")),
+			elem.Text(" and "),
+			elem.A(attrs.Props{
+				attrs.Href:   "https://github.com/tailscale/tailscale",
+				attrs.Rel:    "noreferrer noopener",
+				attrs.Target: "_blank",
+			}, elem.Text("Tailscale")),
+			elem.Text(", used under their BSD-3-Clause licences."),
+		),
 	)
 }
 
-// page renders a standard Headscale page: the given title in the document
-// head, and a body that begins with the Headscale logo, contains the supplied
+// page renders a standard page: the given title in the document head, and a
+// body that begins with the product header, contains the supplied
 // content nodes in order, and ends with the shared footer.
 func page(title string, content ...elem.Node) *elem.Element {
 	body := make([]elem.Node, 0, len(content)+2)

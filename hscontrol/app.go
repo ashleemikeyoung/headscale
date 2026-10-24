@@ -580,7 +580,8 @@ func (h *Headscale) createRouter(apiV1Mux, apiV2Mux http.Handler) *chi.Mux {
 	r.Head("/machine/ping-response", h.PingResponseHandler)
 
 	r.Get("/favicon.ico", FaviconHandler)
-	r.Get("/", BlankHandler)
+	r.Get("/brand/{file}", BrandHandler)
+	r.Get("/", h.HomeHandler)
 
 	return r
 }

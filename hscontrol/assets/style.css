@@ -6,7 +6,7 @@
   --md-default-fg-color--lightest: rgba(0, 0, 0, 0.07);
   --md-code-fg-color: #36464e;
   --md-code-bg-color: #f5f5f5;
-  --md-primary-fg-color: #4051b5;
+  --md-primary-fg-color: #26478d; /* ElRoi blue */
   --md-accent-fg-color: #526cfe;
   --md-typeset-a-color: var(--md-primary-fg-color);
   --md-text-font: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
@@ -20,7 +20,7 @@
   --hs-warning-border: #f59e0b;
   --hs-border: #e5e7eb;
   --hs-bg: #ffffff;
-  --hs-focus-ring: #4051b5;
+  --hs-focus-ring: #26478d;
 }
 
 /* Dark mode */
@@ -32,7 +32,7 @@
     --md-default-fg-color--lightest: rgba(255, 255, 255, 0.07);
     --md-code-fg-color: #c9d1d9;
     --md-code-bg-color: #1e1e1e;
-    --md-primary-fg-color: #7b8fdb;
+    --md-primary-fg-color: #8fabe0; /* ElRoi blue, dark mode */
     --md-accent-fg-color: #8fa4ff;
     --md-typeset-a-color: var(--md-primary-fg-color);
     --hs-success: #34d399;
@@ -43,8 +43,8 @@
     --hs-warning-bg: #451a03;
     --hs-warning-border: #d97706;
     --hs-border: #374151;
-    --hs-bg: #111827;
-    --hs-focus-ring: #7b8fdb;
+    --hs-bg: #16191a;
+    --hs-focus-ring: #8fabe0;
   }
 }
 
@@ -208,19 +208,46 @@ input:focus-visible {
   transform: translateY(1px);
 }
 
-/* Logo */
-.headscale-logo {
-  display: block;
-  width: 400px;
+/* Brand: ElRoi Pneuma header, Qavats IT footer */
+.headscale-logo.brand-header {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+  width: max-content;
   max-width: 100%;
-  height: auto;
   margin: 0 0 3rem 0;
   padding: 0;
+  text-decoration: none;
+}
+
+.brand-product {
+  display: block;
+  height: 56px;
+  width: auto;
+}
+
+.brand-name {
+  font-family: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  font-size: 46px;
+  line-height: 1;
+  color: var(--md-primary-fg-color);
+  padding-bottom: 2px;
+}
+
+.brand-company {
+  display: block;
+  height: 60px;
+  width: auto;
+  margin: 0 auto 0.75rem auto;
 }
 
 @media (max-width: 768px) {
-  .headscale-logo {
-    width: 200px;
+  .brand-product {
+    height: 36px;
+  }
+
+  .brand-name {
+    font-size: 30px;
   }
 }
 

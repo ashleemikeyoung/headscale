@@ -17,7 +17,7 @@ func TestTemplateHTMLConsistency(t *testing.T) {
 		{
 			name: "Auth Success",
 			html: templates.AuthSuccess(templates.AuthSuccessResult{
-				Title:   "Headscale - Node Registered",
+				Title:   "ElRoi Pneuma - Node Registered",
 				Heading: "Node registered",
 				Verb:    "Registered",
 				User:    "test@example.com",
@@ -27,7 +27,7 @@ func TestTemplateHTMLConsistency(t *testing.T) {
 		{
 			name: "Auth Error",
 			html: templates.AuthError(templates.AuthErrorResult{
-				Title:   "Headscale - Error",
+				Title:   "ElRoi Pneuma - Error",
 				Heading: "Forbidden",
 				Message: "You are not authorized. Please contact your administrator.",
 			}).Render(),
@@ -99,7 +99,7 @@ func TestTemplateModernHTMLFeatures(t *testing.T) {
 		{
 			name: "Auth Success",
 			html: templates.AuthSuccess(templates.AuthSuccessResult{
-				Title:   "Headscale - Node Registered",
+				Title:   "ElRoi Pneuma - Node Registered",
 				Heading: "Node registered",
 				Verb:    "Registered",
 				User:    "test@example.com",
@@ -109,7 +109,7 @@ func TestTemplateModernHTMLFeatures(t *testing.T) {
 		{
 			name: "Auth Error",
 			html: templates.AuthError(templates.AuthErrorResult{
-				Title:   "Headscale - Error",
+				Title:   "ElRoi Pneuma - Error",
 				Heading: "Forbidden",
 				Message: "You are not authorized. Please contact your administrator.",
 			}).Render(),
@@ -169,21 +169,21 @@ func TestTemplateExternalLinkSecurity(t *testing.T) {
 		{
 			name: "Auth Success",
 			html: templates.AuthSuccess(templates.AuthSuccessResult{
-				Title:   "Headscale - Node Registered",
+				Title:   "ElRoi Pneuma - Node Registered",
 				Heading: "Node registered",
 				Verb:    "Registered",
 				User:    "test@example.com",
 				Message: "You can now close this window.",
 			}).Render(),
 			externalURLs: []string{
-				"https://headscale.net/stable/",
-				"https://tailscale.com/docs",
+				"https://github.com/juanfont/headscale",
+				"https://github.com/tailscale/tailscale",
 			},
 		},
 		{
 			name: "Auth Error",
 			html: templates.AuthError(templates.AuthErrorResult{
-				Title:   "Headscale - Error",
+				Title:   "ElRoi Pneuma - Error",
 				Heading: "Forbidden",
 				Message: "You are not authorized. Please contact your administrator.",
 			}).Render(),
@@ -241,9 +241,9 @@ func TestTemplateExternalLinkSecurity(t *testing.T) {
 				}
 
 				// Look for the closing > of the <a> tag (within 200 chars should be safe)
-				endIdx := strings.Index(tc.html[idx:idx+200], ">")
+				endIdx := strings.Index(tc.html[idx:min(idx+200, len(tc.html))], ">")
 				if endIdx == -1 {
-					endIdx = 200
+					endIdx = min(200, len(tc.html)-idx)
 				}
 
 				linkTag := tc.html[idx : idx+endIdx]
@@ -266,7 +266,7 @@ func TestTemplateAccessibilityAttributes(t *testing.T) {
 		{
 			name: "Auth Success",
 			html: templates.AuthSuccess(templates.AuthSuccessResult{
-				Title:   "Headscale - Node Registered",
+				Title:   "ElRoi Pneuma - Node Registered",
 				Heading: "Node registered",
 				Verb:    "Registered",
 				User:    "test@example.com",
@@ -276,7 +276,7 @@ func TestTemplateAccessibilityAttributes(t *testing.T) {
 		{
 			name: "Auth Error",
 			html: templates.AuthError(templates.AuthErrorResult{
-				Title:   "Headscale - Error",
+				Title:   "ElRoi Pneuma - Error",
 				Heading: "Forbidden",
 				Message: "You are not authorized. Please contact your administrator.",
 			}).Render(),

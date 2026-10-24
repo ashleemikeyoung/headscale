@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/juanfont/headscale/hscontrol/assets"
 	"github.com/juanfont/headscale/hscontrol/templates"
 	"github.com/juanfont/headscale/hscontrol/types"
@@ -62,7 +63,7 @@ func httpUserError(w http.ResponseWriter, err error) {
 	w.WriteHeader(code)
 
 	page := templates.AuthError(templates.AuthErrorResult{
-		Title:   "Headscale - Error",
+		Title:   templates.ProductName + " - Error",
 		Heading: http.StatusText(code),
 		Message: userMsg,
 	})
@@ -394,6 +395,34 @@ func (a *AuthProviderWeb) RegisterHandler(
 func FaviconHandler(writer http.ResponseWriter, req *http.Request) {
 	writer.Header().Set("Content-Type", "image/png")
 	http.ServeContent(writer, req, "favicon.ico", time.Unix(0, 0), bytes.NewReader(assets.Favicon))
+}
+
+// BrandHandler serves the embedded brand marks ([assets.Brand]).
+func BrandHandler(writer http.ResponseWriter, req *http.Request) {
+	name := chi.URLParam(req, "file")
+
+	data, err := assets.Brand.ReadFile("brand/" + name)
+	if err != nil || strings.Contains(name, "/") {
+		http.NotFound(writer, req)
+
+		return
+	}
+
+	writer.Header().Set("Content-Type", "image/svg+xml")
+	writer.Header().Set("Cache-Control", "public, max-age=86400")
+	writer.Header().Set("X-Content-Type-Options", "nosniff")
+	http.ServeContent(writer, req, name, time.Unix(0, 0), bytes.NewReader(data))
+}
+
+// HomeHandler renders the landing page: what this service is and how to join.
+func (h *Headscale) HomeHandler(writer http.ResponseWriter, req *http.Request) {
+	writer.Header().Set("Content-Type", "text/html; charset=utf-8")
+	writer.WriteHeader(http.StatusOK)
+
+	_, err := writer.Write([]byte(templates.Home(h.cfg.ServerURL).Render()))
+	if err != nil {
+		log.Error().Caller().Err(err).Msg("failed to write home page")
+	}
 }
 
 // BlankHandler returns a blank page with favicon linked.

@@ -109,7 +109,7 @@ var commonTemplate = textTemplate.Must(
     <key>PayloadUUID</key>
     <string>{{.UUID}}</string>
     <key>PayloadDisplayName</key>
-    <string>Headscale</string>
+    <string>ElRoi Pneuma</string>
     <key>PayloadDescription</key>
     <string>Configure Tailscale login server to: {{.URL}}</string>
     <key>PayloadIdentifier</key>

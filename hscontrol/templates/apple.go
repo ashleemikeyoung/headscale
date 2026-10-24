@@ -41,7 +41,7 @@ func Apple(url string) *elem.Element {
 			elem.Li(
 				nil,
 				elem.Text(
-					"Enter your credentials and log in. Headscale should now be working on your iOS device",
+					"Sign in with your passkey. "+ProductName+" should now be working on your iOS device",
 				),
 			),
 		),
@@ -83,7 +83,7 @@ func Apple(url string) *elem.Element {
 		H2(elem.Text("Profiles")),
 		P(
 			elem.Text(
-				"Headscale can be set to the default server by installing a Headscale configuration profile:",
+				ProductName+" can be set as the default server by installing its configuration profile:",
 			),
 		),
 		elem.Div(
@@ -108,7 +108,7 @@ func Apple(url string) *elem.Element {
 			elem.Li(
 				nil,
 				elem.Text("Find and install the "),
-				elem.Strong(nil, elem.Text("Headscale")),
+				elem.Strong(nil, elem.Text(ProductName)),
 				elem.Text(" profile"),
 			),
 			elem.Li(
@@ -191,7 +191,7 @@ func Apple(url string) *elem.Element {
 			),
 			elem.Li(
 				nil,
-				elem.Text("Headscale should now be working on your tvOS device"),
+				elem.Text(ProductName+" should now be working on your tvOS device"),
 			),
 		),
 	)
